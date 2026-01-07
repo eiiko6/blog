@@ -1,0 +1,41 @@
+{% extends "_base.html" %}
+{% block title %}{{ title }}{% endblock title %}
+{% block content %}
+    <h1>{{ title }}</h1>
+
+    <ol>
+      {% for file in files %}
+      <li>
+        <a href="./{{ file.filename }}">{{ file.title }}</a> -
+        <span class="local-date" data-timestamp="{{ file.datetime }}">
+            {{ file.datetime }}
+        </span>
+      </li>
+      {% endfor %}
+    </ol>
+
+    <hr />
+
+   <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const dateElements = document.querySelectorAll('.local-date');
+
+      dateElements.forEach(el => {
+        const rawValue = el.getAttribute('data-timestamp');
+        const unixTimestamp = parseInt(rawValue);
+
+        if (!isNaN(unixTimestamp)) {
+          const date = new Date(unixTimestamp * 1000);
+
+          el.textContent = date.toLocaleString(undefined, {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+        }
+      });
+    });
+  </script>
+{% endblock content %}

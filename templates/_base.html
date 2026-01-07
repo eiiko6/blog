@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% block head %}
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    {% endblock head %}
+</head>
+
+<body>
+    <nav>
+        <a href="/">Home</a>
+    </nav>
+
+    <div id="content">{% block content %}{% endblock content %}</div>
+</body>
+</html>

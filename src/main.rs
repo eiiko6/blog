@@ -8,10 +8,12 @@ use axum::{
 use clap::{Parser, Subcommand};
 use lazy_static::lazy_static;
 use pulldown_cmark::{Options, Parser as MarkdownParser, html};
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::{io::Cursor, path::PathBuf};
 use syntect::{highlighting::ThemeSet, parsing::SyntaxSet};
 use tera::{Context, Tera};
+use tokio::io::{AsyncBufReadExt, BufReader};
 
 mod codeblocks;
 use codeblocks::*;
@@ -20,6 +22,8 @@ lazy_static! {
     pub static ref TEMPLATES: Tera = {
         let mut tera = Tera::default();
         tera.add_raw_templates(vec![
+            ("_base.html", include_str!("../templates/_base.html")),
+            ("home.html", include_str!("../templates/home.html")),
             ("page.html", include_str!("../templates/page.html")),
             ("style.css", include_str!("../templates/style.css")),
         ])
@@ -100,7 +104,54 @@ async fn main() -> anyhow::Result<()> {
 }
 
 async fn render_summary(State(state): State<Arc<AppState>>) -> impl IntoResponse {
-    render_md_file("SUMMARY.md", state).await
+    let mut context = Context::new();
+    context.insert("title", "Pages");
+
+    #[derive(Deserialize, Serialize)]
+    struct Page {
+        filename: String,
+        title: String,
+        datetime: String,
+    }
+
+    let mut pages: Vec<Page> = Vec::new();
+    if let Ok(mut entries) = tokio::fs::read_dir(&state.docs_dir).await {
+        while let Ok(Some(entry)) = entries.next_entry().await {
+            let path = entry.path();
+            let filename = entry.file_name();
+            let filename = filename.to_str().unwrap_or("<filename>");
+
+            let title = if let Ok(file) = tokio::fs::File::open(&path).await {
+                let mut reader = BufReader::new(file);
+                let mut line = String::new();
+                match reader.read_line(&mut line).await {
+                    Ok(_) => line.trim_start_matches('#').trim().to_string(),
+                    Err(_) => filename.to_string(),
+                }
+            } else {
+                filename.to_string()
+            };
+
+            let datetime = filename
+                .split_once('@')
+                .and_then(|(_, ts_with_ext)| ts_with_ext.split('.').next())
+                .map(|dt| dt.to_string())
+                .unwrap_or_else(|| "Invalid Date".to_string());
+
+            pages.push(Page {
+                filename: filename.to_string(),
+                title,
+                datetime,
+            });
+        }
+    }
+
+    context.insert("files", &pages);
+
+    match TEMPLATES.render("home.html", &context) {
+        Ok(rendered) => Html(rendered),
+        Err(e) => Html(format!("<h1>Template Error</h1><pre>{}</pre>", e)),
+    }
 }
 
 async fn render_page(
@@ -112,7 +163,14 @@ async fn render_page(
     } else {
         format!("{}.md", page)
     };
-    render_md_file(&filename, state).await
+
+    let file_path = state.docs_dir.join(&filename);
+
+    let content = match tokio::fs::read_to_string(&file_path).await {
+        Ok(c) => c,
+        Err(_) => return Html("<h1>404</h1><p>Page not found</p>".to_string()),
+    };
+    render_md_file(&content, &filename, state).await
 }
 
 async fn serve_css() -> impl IntoResponse {
@@ -125,14 +183,7 @@ async fn serve_css() -> impl IntoResponse {
     }
 }
 
-async fn render_md_file(filename: &str, state: Arc<AppState>) -> Html<String> {
-    let file_path = state.docs_dir.join(filename);
-
-    let content = match tokio::fs::read_to_string(&file_path).await {
-        Ok(c) => c,
-        Err(_) => return Html("<h1>404</h1><p>Page not found</p>".to_string()),
-    };
-
+async fn render_md_file(content: &String, filename: &str, state: Arc<AppState>) -> Html<String> {
     let mut options = Options::empty();
     options.insert(Options::ENABLE_TABLES);
     options.insert(Options::ENABLE_FOOTNOTES);
