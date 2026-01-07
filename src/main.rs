@@ -34,7 +34,8 @@ lazy_static! {
     pub static ref THEME_SET: ThemeSet = {
         let mut set = ThemeSet::load_defaults();
 
-        let theme_bytes = include_bytes!("../themes/Catppuccin-Macchiato.tmTheme");
+        // let theme_bytes = include_bytes!("../themes/Catppuccin-Macchiato.tmTheme");
+        let theme_bytes = include_bytes!(env!("THEME_FILE_PATH"));
 
         let mut cursor = Cursor::new(theme_bytes);
         match syntect::highlighting::ThemeSet::load_from_reader(&mut cursor) {
