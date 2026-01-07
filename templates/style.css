@@ -1,18 +1,18 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
 
 :root {
-  --bg-color: #0f1116;
-  --container-bg: #171922;
-  --text-main: #e2e2e9;
-  --text-muted: #a1a1b5;
+  --bg-color: #181926;
+  --container-bg: #1e2030;
+  --lighter-bg: #24273a;
+  --text-main: #cad3f5;
+  --text-muted: #a5adcb;
 
-  --accent: #ff4d94;
-  --accent-glow: rgba(255, 77, 148, 0.3);
-  --accent-dark: #cc3d76;
+  --accent: #8aadf4;
+  --accent-glow: #c6a0f6;
 
   --code-bg: var(--container-bg);
-  --border-color: rgba(255, 255, 255, 0.1);
-  --selection-bg: rgba(255, 77, 148, 0.4);
+  --border-color: #494d64;
+  --selection-bg: rgba(91, 96, 120, 0.4);
 
   --radius-sm: 6px;
   --radius-md: 12px;
@@ -77,7 +77,7 @@ a {
 }
 
 a:hover {
-  color: #ff80b3;
+  color: var(--accent-glow);
   text-shadow: 0 0 8px var(--accent-glow);
 }
 
@@ -144,7 +144,7 @@ table {
 }
 
 th {
-  background: rgba(255, 77, 148, 0.1);
+  background: var(--lighter-bg);
   color: var(--accent);
   text-align: left;
 }
@@ -155,7 +155,7 @@ th, td {
 }
 
 tr:nth-child(even) {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(255, 255, 255, 0.025);
 }
 
 hr {
@@ -224,7 +224,7 @@ nav {
   background: var(--container-bg);
   /* backdrop-filter: blur(var(--blur-amount)); */
   /* -webkit-backdrop-filter: blur(var(--blur-amount)); */
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 2px solid var(--border-color);
   padding: 1rem 2rem;
   display: flex;
   justify-content: space-between;
@@ -239,10 +239,6 @@ nav a {
   transition: color 0.2s ease;
 }
 
-nav a:hover {
-  color: var(--accent);
-}
-
 .btn {
   display: inline-block;
   color: #fff;
@@ -253,11 +249,6 @@ nav a:hover {
   cursor: pointer;
   text-decoration: none;
   transition: background 0.2s ease;
-}
-
-.btn:hover {
-  background-color: rgba(255, 255, 255, 0.05);
-  text-decoration: none;
 }
 
 .btn.disabled {
