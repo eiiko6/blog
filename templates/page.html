@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title>{{ title }}</title>
     <link rel="stylesheet" href="/style.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
     <article>
@@ -11,19 +13,43 @@
     </article>
 
     <nav>
-        <!-- {% if prev_page %} -->
-        <!--     <a class="btn" href="/{{ prev_page }}">← Previous</a> -->
-        <!-- {% else %} -->
-        <!--     <span class="btn disabled">← Previous</span> -->
-        <!-- {% endif %} -->
-
         <a href="/">Home (Summary)</a>
-
-        <!-- {% if next_page %} -->
-        <!--     <a class="btn" href="/{{ next_page }}">Next →</a> -->
-        <!-- {% else %} -->
-        <!--     <span class="btn disabled">Next →</span> -->
-        <!-- {% endif %} -->
     </nav>
+
+    <script>
+    document.querySelectorAll('pre[data-code]').forEach((block) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'code-wrapper';
+
+        block.parentNode.insertBefore(wrapper, block);
+
+        wrapper.appendChild(block);
+
+        const button = document.createElement('button');
+        button.className = 'copy-button';
+        button.type = 'button';
+        button.innerHTML = '<i class="fa-regular fa-copy"></i>';
+
+        wrapper.appendChild(button);
+
+        button.addEventListener('click', async () => {
+            const text = block.getAttribute('data-code');
+
+            try {
+                await navigator.clipboard.writeText(text);
+
+                button.innerHTML = '<i class="fa-solid fa-check"></i>';
+                button.classList.add('copied');
+
+                setTimeout(() => {
+                    button.innerHTML = '<i class="fa-regular fa-copy"></i>';
+                    button.classList.remove('copied');
+                }, 2000);
+            } catch (err) {
+                console.error('Copy failed', err);
+            }
+        });
+    });
+    </script>
 </body>
 </html>

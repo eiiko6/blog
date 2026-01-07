@@ -208,6 +208,7 @@ dependencies = [
  "clap",
  "lazy_static",
  "pulldown-cmark",
+ "pulldown-cmark-escape",
  "reqwest",
  "serde",
  "syntect",

@@ -1,4 +1,5 @@
 use pulldown_cmark::{CodeBlockKind, CowStr, Event, Parser as MarkdownParser, Tag, TagEnd};
+use pulldown_cmark_escape::escape_html;
 use syntect::html::highlighted_html_for_string;
 
 use crate::{SYNTAX_SET, THEME_SET};
@@ -42,6 +43,12 @@ impl<'a> Iterator for CodeblockRenderer<'a> {
         };
 
         let rendered_html = render_code_to_html(&code_content, lang);
+
+        let mut escaped_code = String::new();
+        let _ = escape_html(&mut escaped_code, &code_content);
+
+        let rendered_html =
+            rendered_html.replace("<pre", &format!("<pre data-code=\"{}\"", escaped_code));
 
         Some(Event::Html(CowStr::Boxed(rendered_html.into_boxed_str())))
     }
