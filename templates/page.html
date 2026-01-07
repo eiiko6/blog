@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <article>
+        {{ content | safe }}
+    </article>
+
+    <nav>
+        <!-- {% if prev_page %} -->
+        <!--     <a class="btn" href="/{{ prev_page }}">← Previous</a> -->
+        <!-- {% else %} -->
+        <!--     <span class="btn disabled">← Previous</span> -->
+        <!-- {% endif %} -->
+
+        <a href="/">Home (Summary)</a>
+
+        <!-- {% if next_page %} -->
+        <!--     <a class="btn" href="/{{ next_page }}">Next →</a> -->
+        <!-- {% else %} -->
+        <!--     <span class="btn disabled">Next →</span> -->
+        <!-- {% endif %} -->
+    </nav>
+</body>
+</html>
