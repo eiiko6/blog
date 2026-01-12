@@ -63,14 +63,24 @@ enum Commands {
     Serve {
         /// Path to the directory containing SUMMARY.md
         path: PathBuf,
+
+        /// Whether the home page and navbar should be removed
+        #[arg(short, long)]
+        no_navigation: bool,
+
         /// Port to listen on
         #[arg(short, long, default_value = "3456")]
         port: u16,
+
+        /// Whether to serve on 0.0.0.0 (local network)
+        #[arg(short = 'H', long)]
+        host: bool,
     },
 }
 
 struct AppState {
     docs_dir: PathBuf,
+    no_navigation: bool,
 }
 
 #[tokio::main]
@@ -84,10 +94,18 @@ async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Serve { path, port } => {
+        Commands::Serve {
+            path,
+            port,
+            host,
+            no_navigation,
+        } => {
             let abs_path = std::fs::canonicalize(&path)?;
 
-            let shared_state = Arc::new(AppState { docs_dir: abs_path });
+            let shared_state = Arc::new(AppState {
+                docs_dir: abs_path,
+                no_navigation,
+            });
 
             let app = Router::new()
                 .route("/", get(render_summary))
@@ -95,8 +113,14 @@ async fn main() -> anyhow::Result<()> {
                 .route("/style.css", get(serve_css))
                 .with_state(shared_state);
 
-            let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port)).await?;
-            tracing::info!("Listening on http://localhost:{}", port);
+            let addr = if host {
+                format!("0.0.0.0:{}", port)
+            } else {
+                format!("127.0.0.1:{}", port)
+            };
+
+            let listener = tokio::net::TcpListener::bind(&addr).await?;
+            tracing::info!("Listening on {}", addr);
             axum::serve(listener, app).await?;
         }
     }
@@ -105,6 +129,10 @@ async fn main() -> anyhow::Result<()> {
 }
 
 async fn render_summary(State(state): State<Arc<AppState>>) -> impl IntoResponse {
+    if state.no_navigation {
+        return (StatusCode::NOT_FOUND, "Navigation is disabled").into_response();
+    }
+
     let mut context = Context::new();
     context.insert("title", "Pages");
 
@@ -150,8 +178,8 @@ async fn render_summary(State(state): State<Arc<AppState>>) -> impl IntoResponse
     context.insert("files", &pages);
 
     match TEMPLATES.render("home.html", &context) {
-        Ok(rendered) => Html(rendered),
-        Err(e) => Html(format!("<h1>Template Error</h1><pre>{}</pre>", e)),
+        Ok(rendered) => Html(rendered).into_response(),
+        Err(e) => Html(format!("<h1>Template Error</h1><pre>{}</pre>", e)).into_response(),
     }
 }
 
@@ -198,13 +226,18 @@ async fn render_md_file(content: &String, filename: &str, state: Arc<AppState>) 
     let mut html_output = String::new();
     html::push_html(&mut html_output, renderer);
 
-    let (prev_page, next_page) = get_nav_links(&state.docs_dir, filename);
+    let (prev_page, next_page) = if state.no_navigation {
+        (None, None)
+    } else {
+        get_nav_links(&state.docs_dir, filename)
+    };
 
     let mut context = Context::new();
     context.insert("title", filename);
     context.insert("content", &html_output);
     context.insert("prev_page", &prev_page);
     context.insert("next_page", &next_page);
+    context.insert("no_navigation", &state.no_navigation);
 
     match TEMPLATES.render("page.html", &context) {
         Ok(rendered) => Html(rendered),
