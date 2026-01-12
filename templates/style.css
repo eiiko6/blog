@@ -38,8 +38,10 @@ body {
   font-size: 14px;
 }
 
-article {
-  max-width: 1000px;
+#content {
+  width: 100%;
+  max-width: var(--container-width);
+  min-width: 0; 
 }
 
 ::selection {

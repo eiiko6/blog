@@ -1,3 +1,5 @@
 /target
 /themes
 /result
+/example/*.html
+/example/*.css
